@@ -2,11 +2,11 @@
 
 .PHONY: run
 run:
-	go run ./cmd/main.go
+	go run ./cmd/psps/main.go
 
 .PHONY: fmt vet build
 build:
-	go build -o ./bin/psps ./cmd/main.go
+	go build -o ./bin/psps ./cmd/psps/main.go
 
 .PHONY: fmt
 fmt:
