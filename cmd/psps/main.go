@@ -3,12 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net"
 	"os"
 	"os/signal"
 	"runtime"
 	"sort"
 	"syscall"
+
+	"github.com/csaba-nagy/psps/internal/portscanner"
 )
 
 var (
@@ -28,78 +29,37 @@ func init() {
 func main() {
 	flag.Parse()
 
-	var openPorts []int
+	cmd := portscanner.ScanQuery{
+		Host:         host,
+		FromPort:     fromPort,
+		ToPort:       toPort,
+		NumOfWorkers: numOfWorkers,
+	}
+
+	scanner := portscanner.NewTcpPortScanner()
+
+	scanResult := scanner.Scan(cmd)
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		<-sigs
-		printResults(openPorts)
+		printResults(scanResult.OpenPorts)
 
 		os.Exit(0)
 	}()
 
-	portsToScan := getPortListToScan(fromPort, toPort)
-
-	portsChan := make(chan int, numOfWorkers)
-	resultsChan := make(chan int)
-
-	for range cap(portsChan) {
-		go worker(host, portsChan, resultsChan)
-	}
-
-	go func() {
-		for _, p := range portsToScan {
-			portsChan <- p
-		}
-	}()
-
-	for range len(portsToScan) {
-		if p := <-resultsChan; p != 0 {
-			openPorts = append(openPorts, p)
-		}
-	}
-
-	close(portsChan)
-	close(resultsChan)
-
-	printResults(openPorts)
-}
-
-func worker(host string, portsChan <-chan int, resultsChan chan<- int) {
-	for p := range portsChan {
-		address := fmt.Sprintf("%s:%d", host, p)
-
-		conn, err := net.Dial("tcp", address)
-		if err != nil {
-			resultsChan <- 0
-
-			continue
-		}
-
-		conn.Close()
-		resultsChan <- p
-	}
+	printResults(scanResult.OpenPorts)
 }
 
 func printResults(ports []int) {
 	sort.Ints(ports)
 
 	fmt.Println("📊 REPORT")
-	fmt.Println("🚪Opened ports")
+	fmt.Println("🚪 Opened ports")
 
 	for _, p := range ports {
-		fmt.Printf("%d\n", p)
+		fmt.Printf("[OPEN] %d\n", p)
 	}
-}
-
-func getPortListToScan(fromPort, toPort int) []int {
-	list := make([]int, 0, toPort-fromPort+1)
-
-	for i := fromPort; i <= toPort; i++ {
-		list = append(list, i)
-	}
-
-	return list
 }
