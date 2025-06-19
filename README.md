@@ -1,4 +1,4 @@
-# Port Scanner (psps)
+# psps 🐈
 
 A simple and efficient port scanning tool written in Go that allows you to scan TCP ports on a target host.
 
@@ -8,6 +8,7 @@ A simple and efficient port scanning tool written in Go that allows you to scan 
 - Configurable port range
 - Parallel scanning using multiple workers
 - Graceful shutdown handling
+- Flexible output options (console or file)
 - Simple and intuitive command-line interface
 
 ## Installation
@@ -34,6 +35,7 @@ The following command-line options are available:
 - `-from`: Starting port number (default: 8080)
 - `-to`: Ending port number (default: 8090)
 - `-workers`: Number of concurrent workers (default: number of CPU cores)
+- `-output`: Path to output file (optional). If specified, results will be written to this file instead of console output.
 
 Example usage:
 ```bash
@@ -43,8 +45,8 @@ psps
 # Scan ports 20-100 on example.com with 4 workers
 psps -host example.com -from 20 -to 100 -workers 4
 
-# Scan ports 1000-2000 on a specific IP
-psps -host 192.168.1.1 -from 1000 -to 2000
+# Scan ports 1000-2000 on a specific IP and save results to a file
+psps -host 192.168.1.1 -from 1000 -to 2000 -output results.txt
 ```
 
 ## Output
