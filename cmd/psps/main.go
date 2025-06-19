@@ -2,14 +2,13 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"os/signal"
 	"runtime"
-	"sort"
 	"syscall"
 
 	"github.com/csaba-nagy/psps/internal/portscanner"
+	"github.com/csaba-nagy/psps/internal/reporter"
 )
 
 var (
@@ -18,6 +17,11 @@ var (
 	toPort       int
 	numOfWorkers int
 )
+
+type application struct {
+	scanner  portscanner.PortScanner
+	reporter reporter.Reporter
+}
 
 func init() {
 	flag.StringVar(&host, "host", "127.0.01", "Host to scan")
@@ -29,37 +33,27 @@ func init() {
 func main() {
 	flag.Parse()
 
-	cmd := portscanner.ScanQuery{
+	application := &application{
+		scanner:  portscanner.NewTcpPortScanner(),
+		reporter: reporter.ConsoleReporter{},
+	}
+
+	scanResult := application.scanner.Scan(portscanner.ScanQuery{
 		Host:         host,
 		FromPort:     fromPort,
 		ToPort:       toPort,
 		NumOfWorkers: numOfWorkers,
-	}
-
-	scanner := portscanner.NewTcpPortScanner()
-
-	scanResult := scanner.Scan(cmd)
+	})
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		<-sigs
-		printResults(scanResult.OpenPorts)
+		application.reporter.Report(scanResult.OpenPorts)
 
 		os.Exit(0)
 	}()
 
-	printResults(scanResult.OpenPorts)
-}
-
-func printResults(ports []int) {
-	sort.Ints(ports)
-
-	fmt.Println("📊 REPORT")
-	fmt.Println("🚪 Opened ports")
-
-	for _, p := range ports {
-		fmt.Printf("[OPEN] %d\n", p)
-	}
+	application.reporter.Report(scanResult.OpenPorts)
 }
