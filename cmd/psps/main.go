@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"log"
 	"os"
 	"os/signal"
 	"runtime"
@@ -16,6 +17,7 @@ var (
 	fromPort     int
 	toPort       int
 	numOfWorkers int
+	outputFile   string
 )
 
 type application struct {
@@ -28,14 +30,25 @@ func init() {
 	flag.IntVar(&fromPort, "from", 8080, "Port to start scanning from")
 	flag.IntVar(&toPort, "to", 8090, "Port at which to stop scanning")
 	flag.IntVar(&numOfWorkers, "workers", runtime.NumCPU(), "Number of the workers. Defaults to system's number of CPUs.")
+	flag.StringVar(&outputFile, "output", "", "Output file path")
 }
 
 func main() {
 	flag.Parse()
 
+	var rp reporter.Reporter
+
+	if outputFile != "" {
+		rp = reporter.FileReporter{
+			OutputFile: outputFile,
+		}
+	} else {
+		rp = reporter.ConsoleReporter{}
+	}
+
 	application := &application{
 		scanner:  portscanner.NewTcpPortScanner(),
-		reporter: reporter.ConsoleReporter{},
+		reporter: rp,
 	}
 
 	scanResult := application.scanner.Scan(portscanner.ScanQuery{
@@ -55,5 +68,9 @@ func main() {
 		os.Exit(0)
 	}()
 
-	application.reporter.Report(scanResult.OpenPorts)
+	err := application.reporter.Report(scanResult.OpenPorts)
+
+	if err != nil {
+		log.Fatal("Error reporting results:", err)
+	}
 }
