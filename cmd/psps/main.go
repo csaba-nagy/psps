@@ -12,50 +12,49 @@ import (
 	"github.com/csaba-nagy/psps/internal/reporter"
 )
 
-var (
+type config struct {
 	host         string
 	fromPort     int
 	toPort       int
 	numOfWorkers int
 	outputFile   string
-)
+}
 
 type application struct {
 	scanner  portscanner.PortScanner
 	reporter reporter.Reporter
 }
 
-func init() {
-	flag.StringVar(&host, "host", "127.0.01", "Host to scan")
-	flag.IntVar(&fromPort, "from", 8080, "Port to start scanning from")
-	flag.IntVar(&toPort, "to", 8090, "Port at which to stop scanning")
-	flag.IntVar(&numOfWorkers, "workers", runtime.NumCPU(), "Number of the workers. Defaults to system's number of CPUs.")
-	flag.StringVar(&outputFile, "output", "", "Output file path")
-}
-
 func main() {
-	flag.Parse()
-
+	var cfg config
 	var rp reporter.Reporter
 
-	if outputFile != "" {
+	flag.StringVar(&cfg.host, "host", "127.0.01", "Host to scan")
+	flag.IntVar(&cfg.fromPort, "from", 8080, "Port to start scanning from")
+	flag.IntVar(&cfg.toPort, "to", 8090, "Port at which to stop scanning")
+	flag.IntVar(&cfg.numOfWorkers, "workers", runtime.NumCPU(), "Number of the workers. Defaults to system's number of CPUs.")
+	flag.StringVar(&cfg.outputFile, "output", "", "Output file path")
+
+	flag.Parse()
+
+	if cfg.outputFile != "" {
 		rp = reporter.FileReporter{
-			OutputFile: outputFile,
+			OutputFile: cfg.outputFile,
 		}
 	} else {
 		rp = reporter.ConsoleReporter{}
 	}
 
-	application := &application{
+	app := &application{
 		scanner:  portscanner.NewTcpPortScanner(),
 		reporter: rp,
 	}
 
-	scanResult := application.scanner.Scan(portscanner.ScanQuery{
-		Host:         host,
-		FromPort:     fromPort,
-		ToPort:       toPort,
-		NumOfWorkers: numOfWorkers,
+	scanResult := app.scanner.Scan(portscanner.ScanQuery{
+		Host:         cfg.host,
+		FromPort:     cfg.fromPort,
+		ToPort:       cfg.toPort,
+		NumOfWorkers: cfg.numOfWorkers,
 	})
 
 	sigs := make(chan os.Signal, 1)
@@ -63,12 +62,12 @@ func main() {
 
 	go func() {
 		<-sigs
-		application.reporter.Report(scanResult.OpenPorts)
+		app.reporter.Report(scanResult.OpenPorts)
 
 		os.Exit(0)
 	}()
 
-	err := application.reporter.Report(scanResult.OpenPorts)
+	err := app.reporter.Report(scanResult.OpenPorts)
 
 	if err != nil {
 		log.Fatal("Error reporting results:", err)
