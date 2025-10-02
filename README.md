@@ -49,15 +49,6 @@ psps -host example.com -from 20 -to 100 -workers 4
 psps -host 192.168.1.1 -from 1000 -to 2000 -output results.txt
 ```
 
-## Output
-
-The tool will output the list of open ports found during the scan. The results will be printed when the scan completes or when interrupted with Ctrl+C.
-
-## Exit Codes
-
-- 0: Successful scan completion
-- 1: Error during scan
-
 ## License
 
 MIT License
