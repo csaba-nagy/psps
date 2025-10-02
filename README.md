@@ -17,7 +17,7 @@ To install the port scanner, you can either build it from source or download a p
 
 From source:
 ```bash
-go install github.com/csaba-nagy/psps@latest
+go install github.com/csaba-nagy/psps/cmd/psps@latest
 ```
 
 ## Usage
