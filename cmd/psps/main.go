@@ -33,7 +33,7 @@ func main() {
 	var rp reporter.Reporter
 	var showVersion bool
 
-	flag.StringVar(&cfg.host, "host", "127.0.01", "Host to scan")
+	flag.StringVar(&cfg.host, "host", "127.0.0.1", "Host to scan")
 	flag.IntVar(&cfg.fromPort, "from", 8080, "Port to start scanning from")
 	flag.IntVar(&cfg.toPort, "to", 8090, "Port at which to stop scanning")
 	flag.IntVar(&cfg.numOfWorkers, "workers", runtime.NumCPU(), "Number of the workers. Defaults to system's number of CPUs.")
