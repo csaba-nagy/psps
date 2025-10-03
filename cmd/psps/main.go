@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -11,6 +12,8 @@ import (
 	"github.com/csaba-nagy/psps/internal/portscanner"
 	"github.com/csaba-nagy/psps/internal/reporter"
 )
+
+const version = "v0.1.0"
 
 type config struct {
 	host         string
@@ -28,6 +31,7 @@ type application struct {
 func main() {
 	var cfg config
 	var rp reporter.Reporter
+	var showVersion bool
 
 	flag.StringVar(&cfg.host, "host", "127.0.01", "Host to scan")
 	flag.IntVar(&cfg.fromPort, "from", 8080, "Port to start scanning from")
@@ -35,7 +39,15 @@ func main() {
 	flag.IntVar(&cfg.numOfWorkers, "workers", runtime.NumCPU(), "Number of the workers. Defaults to system's number of CPUs.")
 	flag.StringVar(&cfg.outputFile, "output", "", "Output file path")
 
+	flag.BoolVar(&showVersion, "version", false, "Current version")
+
 	flag.Parse()
+
+	if showVersion {
+		fmt.Println(version)
+
+		os.Exit(0)
+	}
 
 	if cfg.outputFile != "" {
 		rp = reporter.FileReporter{
