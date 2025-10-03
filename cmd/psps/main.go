@@ -13,7 +13,7 @@ import (
 	"github.com/csaba-nagy/psps/internal/reporter"
 )
 
-const version = "v0.2.0"
+const version = "v0.2.1"
 
 type config struct {
 	host         string
